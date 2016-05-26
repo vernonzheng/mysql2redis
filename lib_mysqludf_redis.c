@@ -12,9 +12,10 @@ static struct config cfg = {
     .unix_sock = {
     	.path = "/tmp/redis.sock"
      },
-    .password = "go2oovoo",
+    .password = "",
     .auth = 0,
-    .log_file = "/tmp/redis_udf.log",
+    .log_file = "/var/log/redis_udf.log",
+    .cmd_error_log_file = "/home/web_log/mysql2redis/cmd_error.log",
     .debug = 0,
     .type = CONN_TCP
 };
@@ -175,14 +176,14 @@ redisContext *_redis_context_reinit() {
 
     return sredisContext;
 }
-	
+
 void _redis_context_deinit() {
     if (sredisContext)
       _myredisDconnect(sredisContext);
     sredisContext = NULL;
     return;
 }
-	
+
 void _myredisDconnect(redisContext *c) {
     redisFree(c);
 }
@@ -235,9 +236,9 @@ long long _do_redis_command( const char ** args,const size_t * argvlen, size_t a
 
     c = (redisContext*)_redis_context_init();
     if (!c) {
-	info_print("monitor_log,_redis_context_init return null, connect failed\n");
-	pthread_mutex_unlock(&sredisContext_mutex);
-	return -1;
+	    info_print("monitor_log,_redis_context_init return null, connect failed\n");
+	    pthread_mutex_unlock(&sredisContext_mutex);
+	    return -1;
     }
 
     debug_print("%s %s %s\n",args[0] ,args[1],args[2]);
@@ -247,13 +248,15 @@ long long _do_redis_command( const char ** args,const size_t * argvlen, size_t a
 
     	c = (redisContext*)_redis_context_reinit();
         if (!c) {
-            info_print("monitor_log,_do_redis_command,Cannot reconnect to redis,cmd:%s,key:%s\n ", args[0], args[1]);
+            info_print("_do_redis_command,Cannot reconnect to redis,cmd:%s,key:%s\n ", args[0], args[1]);
+            cmd_fail_print("timestamp,cmd_error,%s,%s", args[0], args[1]);
             pthread_mutex_unlock(&sredisContext_mutex);
             return -1;
         }
     	reply = redisCommandArgv(c,arg_count,args,argvlen);
         if (!reply) {
-            info_print("monitor_log,_do_redis_command,reconnect to redis and re-execute redisCommandArgv failed,cmd:%s,key:%s\n ", args[0], args[1]);
+            info_print("_do_redis_command,reconnect to redis and re-execute redisCommandArgv failed,cmd:%s,key:%s\n ", args[0], args[1]);
+            cmd_fail_print("timestamp,cmd_error,%s,%s", args[0], args[1]);
             pthread_mutex_unlock(&sredisContext_mutex);
             return -1;
         }
@@ -268,14 +271,14 @@ long long _do_redis_command( const char ** args,const size_t * argvlen, size_t a
 
 
 
-/*	
+/*
 set server info.
 */
 my_bool redis_servers_set_v2_init(UDF_INIT *initid, UDF_ARGS *args, char *message) {
 
     pthread_mutex_lock(&sredisContext_mutex);
-	
-   
+
+
     redisContext *c = NULL;
     if(args->arg_count < 2 || args->arg_type[0] != STRING_RESULT || args->arg_type[1] != INT_RESULT) {
          strncpy(message,"Wrong arguments to Redis function.  Usage: 'tcp.host' (string) 'tcp.port' (string)", MYSQL_ERRMSG_SIZE);
@@ -302,9 +305,10 @@ my_bool redis_servers_set_v2_init(UDF_INIT *initid, UDF_ARGS *args, char *messag
 	  pthread_mutex_unlock(&sredisContext_mutex);
       return 2;
     }
-	
+
 	//open log file
     pFile = fopen(cfg.log_file,"a");
+    pCmdFailFile = fopen(cfg.cmd_error_log_file,"a");
 
 	//start consumer thread.
     start_consumer_worker();
@@ -363,7 +367,7 @@ my_ulonglong redis_command_v2(
     char *error __attribute__((__unused__)))
 {
     apr_status_t status;
-    
+
 	struct redis_command* command = malloc(sizeof(struct redis_command));
 	command->argv = malloc(args->arg_count*sizeof(void*));//allocate argv mem.
 	command->argvlen = malloc(args->arg_count*sizeof(size_t));//allocate argvlen mem.

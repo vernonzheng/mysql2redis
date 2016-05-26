@@ -53,14 +53,14 @@ typedef long long longlong;
 extern "C" {
 #endif
 
-#define LIBVERSION "lib_mysqludf_redis version 0.2.0"
+#define LIBVERSION "lib_mysqludf_redis version 0.2.1"
 #define MAX_LEN 8192 // max allowed length of input string, including 0 terminator
 #define MAX_STR 16 // max allowed number of substrings in input string
 
 #ifdef __WIN__
 #define SETENV(name,value)		SetEnvironmentVariable(name,value);
 #else
-#define SETENV(name,value)		setenv(name,value,1);		
+#define SETENV(name,value)		setenv(name,value,1);
 #endif
 
 
@@ -86,10 +86,11 @@ struct config {
     struct {
         const char *path;
     } unix_sock;
-   char password[256];
-   int auth;
-   char log_file[256];
-   int debug;
+    char password[256];
+    int auth;
+    char log_file[256];
+    char cmd_error_log_file[256];
+    int debug;
 };
 
 
@@ -101,6 +102,8 @@ static redisContext *sredisContext = NULL;
 
 
 static FILE * pFile = NULL;
+
+static FILE * pCmdFailFile = NULL;
 
 
 #define QUEUE_SIZE  100000
@@ -115,19 +118,19 @@ static apr_thread_pool_t *thrp = NULL;
 /**
 set server info command.
  */
-DLLEXP 
+DLLEXP
 my_bool redis_servers_set_v2_init(
 	UDF_INIT *initid
 ,	UDF_ARGS *args
 ,	char *message
 );
 
-DLLEXP 
+DLLEXP
 void redis_servers_set_v2_deinit(
 	UDF_INIT *initid
 );
 
-DLLEXP 
+DLLEXP
 my_ulonglong redis_servers_set_v2(
 	UDF_INIT *initid
 ,	UDF_ARGS *args
@@ -141,19 +144,19 @@ my_ulonglong redis_servers_set_v2(
  * 
  * execute multiple redis command (ex: select 1\n set x 1\n)
  */
-DLLEXP 
+DLLEXP
 my_bool redis_command_v2_init(
 	UDF_INIT *initid
 ,	UDF_ARGS *args
 ,	char *message
 );
 
-DLLEXP 
+DLLEXP
 void redis_command_v2_deinit(
 	UDF_INIT *initid
 );
 
-DLLEXP 
+DLLEXP
 my_ulonglong redis_command_v2(
 	UDF_INIT *initid
 ,	UDF_ARGS *args
@@ -221,6 +224,13 @@ int start_consumer_worker(void);
    do { \
 	   if (pFile) \
 	   	   fprintf(pFile,  __VA_ARGS__); \
+   } while (0)
+
+
+#define cmd_fail_print(...) \
+   do { \
+	   if (pCmdFailFile) \
+	   	   fprintf(pCmdFailFile,  __VA_ARGS__); \
    } while (0)
 
 
