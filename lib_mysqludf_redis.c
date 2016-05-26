@@ -6,7 +6,7 @@
 
 static struct config cfg = {
     .tcp = {
-	.host = "192.168.0.118",
+	.host = "127.0.0.1",
 	.port = 6379
     },
     .unix_sock = {
