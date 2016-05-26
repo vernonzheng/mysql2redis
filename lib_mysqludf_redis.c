@@ -202,7 +202,11 @@ redisContext *_myredisConnect(struct config config) {
     }
 
     if (c->err && pFile) {
-    	info_print("Connection error: %s\n", c->errstr);
+        if (config.type == CONN_TCP) {
+            info_print("Connection to host: %s,port: %s ,error: %s\n", config.tcp.host, config.tcp.port, c->errstr);
+        } else {
+            info_print("Connection error: %s\n", c->errstr);
+        }
 	return c;
     }
 
@@ -231,7 +235,7 @@ long long _do_redis_command( const char ** args,const size_t * argvlen, size_t a
 
     c = (redisContext*)_redis_context_init();
     if (!c) {
-	info_print("_redis_context_init return null, connect failed\n");
+	info_print("monitor_log,_redis_context_init return null, connect failed\n");
 	pthread_mutex_unlock(&sredisContext_mutex);
 	return -1;
     }
@@ -243,13 +247,13 @@ long long _do_redis_command( const char ** args,const size_t * argvlen, size_t a
 
     	c = (redisContext*)_redis_context_reinit();
         if (!c) {
-            info_print("_do_redis_command, Cannot reconnect to redis\n ");
+            info_print("monitor_log,_do_redis_command,Cannot reconnect to redis,cmd:%s,key:%s\n ", args[0], args[1]);
             pthread_mutex_unlock(&sredisContext_mutex);
             return -1;
         }
     	reply = redisCommandArgv(c,arg_count,args,argvlen);
         if (!reply) {
-            info_print("_do_redis_command, reconnect to redis and re-execute redisCommandArgv failed\n ");
+            info_print("monitor_log,_do_redis_command,reconnect to redis and re-execute redisCommandArgv failed,cmd:%s,key:%s\n ", args[0], args[1]);
             pthread_mutex_unlock(&sredisContext_mutex);
             return -1;
         }
