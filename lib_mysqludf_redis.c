@@ -249,14 +249,14 @@ long long _do_redis_command( const char ** args,const size_t * argvlen, size_t a
     	c = (redisContext*)_redis_context_reinit();
         if (!c) {
             info_print("_do_redis_command,Cannot reconnect to redis,cmd:%s,key:%s\n ", args[0], args[1]);
-            cmd_fail_print("timestamp,cmd_error,%s,%s", args[0], args[1]);
+            cmd_fail_print("timestamp,cmd_error,%s,%s\n", args[0], args[1]);
             pthread_mutex_unlock(&sredisContext_mutex);
             return -1;
         }
     	reply = redisCommandArgv(c,arg_count,args,argvlen);
         if (!reply) {
             info_print("_do_redis_command,reconnect to redis and re-execute redisCommandArgv failed,cmd:%s,key:%s\n ", args[0], args[1]);
-            cmd_fail_print("timestamp,cmd_error,%s,%s", args[0], args[1]);
+            cmd_fail_print("timestamp,cmd_error,%s,%s\n", args[0], args[1]);
             pthread_mutex_unlock(&sredisContext_mutex);
             return -1;
         }
