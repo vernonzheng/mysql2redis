@@ -3,7 +3,7 @@
 */
 
 #include "lib_mysqludf_redis.h"
-#include <time.h>
+
 
 static struct config cfg = {
     .tcp = {
@@ -311,7 +311,7 @@ my_bool redis_servers_set_v2_init(UDF_INIT *initid, UDF_ARGS *args, char *messag
       return 2;
     }
 
-	//open log file
+    //open log file
     pFile = fopen(cfg.log_file,"a");
     pCmdFailFile = fopen(cfg.cmd_error_log_file,"a");
 
@@ -400,8 +400,6 @@ my_ulonglong redis_command_v2(
      }
 	return 0;
 }
-
-
 
 
 DLLEXP
