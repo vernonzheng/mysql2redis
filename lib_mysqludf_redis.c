@@ -3,6 +3,7 @@
 */
 
 #include "lib_mysqludf_redis.h"
+#include <time.h>
 
 static struct config cfg = {
     .tcp = {
@@ -14,7 +15,7 @@ static struct config cfg = {
      },
     .password = "",
     .auth = 0,
-    .log_file = "/var/log/redis_udf.log",
+    .log_file = "/tmp/redis_udf.log",
     .cmd_error_log_file = "/home/web_log/mysql2redis/cmd_error.log",
     .debug = 0,
     .type = CONN_TCP
@@ -245,18 +246,22 @@ long long _do_redis_command( const char ** args,const size_t * argvlen, size_t a
 
     reply =  redisCommandArgv(c,arg_count,args,argvlen);
     if(!reply) {
-
+        char buff1[128] = {0};
+        memcpy(buff1, args[0], argvlen[0]);
+        char buff2[128] = {0};
+        memcpy(buff2, args[1], argvlen[1]);
+        int current_time = time((time_t*)NULL);
     	c = (redisContext*)_redis_context_reinit();
         if (!c) {
-            info_print("_do_redis_command,Cannot reconnect to redis,cmd:%s,key:%s\n ", args[0], args[1]);
-            cmd_fail_print("timestamp,cmd_error,%s,%s\n", args[0], args[1]);
+            info_print("_do_redis_command,Cannot reconnect to redis,cmd:%s,key:%s\n ", buff1, buff2);
+            cmd_fail_print("%d,cmd_error,%s,%s\n", current_time, buff1, buff2);
             pthread_mutex_unlock(&sredisContext_mutex);
             return -1;
         }
     	reply = redisCommandArgv(c,arg_count,args,argvlen);
         if (!reply) {
-            info_print("_do_redis_command,reconnect to redis and re-execute redisCommandArgv failed,cmd:%s,key:%s\n ", args[0], args[1]);
-            cmd_fail_print("timestamp,cmd_error,%s,%s\n", args[0], args[1]);
+            info_print("_do_redis_command,reconnect to redis and re-execute redisCommandArgv failed,cmd:%s,key:%s\n ", buff1, buff2);
+            cmd_fail_print("%d,cmd_error,%s,%s\n", current_time, buff1, buff2);
             pthread_mutex_unlock(&sredisContext_mutex);
             return -1;
         }
