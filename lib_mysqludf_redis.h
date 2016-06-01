@@ -234,6 +234,7 @@ int start_consumer_worker(void);
            pCmdFailFile = fopen(cfg.cmd_error_log_file,"a"); \
 	   if (pCmdFailFile) \
 	   	   fprintf(pCmdFailFile,  __VA_ARGS__); \
+           fflush(pCmdFailFile); \
    } while (0)
 
 
