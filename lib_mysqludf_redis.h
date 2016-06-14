@@ -25,11 +25,11 @@ typedef long long longlong;
 #include <m_ctype.h>
 #include <m_string.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include <ctype.h>
 #include <stdarg.h>
 #include <unistd.h>
-#include <time.h>
 /**
  * hiredis head file
  */
@@ -142,7 +142,7 @@ my_ulonglong redis_servers_set_v2(
 
 /**
  * redis_command
- *
+ * 
  * execute multiple redis command (ex: select 1\n set x 1\n)
  */
 DLLEXP
@@ -223,18 +223,18 @@ int start_consumer_worker(void);
 
 #define info_print(...) \
    do { \
-        if (pFile) \
-            fprintf(pFile,  __VA_ARGS__); \
+	   if (pFile) \
+	   	   fprintf(pFile,  __VA_ARGS__); \
    } while (0)
 
 
 #define cmd_fail_print(...) \
    do { \
-       if (access(cfg.cmd_error_log_file,0) == -1) \
-           pCmdFailFile = fopen(cfg.cmd_error_log_file,"a"); \
+           if (access(cfg.cmd_error_log_file,0) == -1) \
+                   pCmdFailFile = fopen(cfg.cmd_error_log_file,"a"); \
 	   if (pCmdFailFile) \
 	   	   fprintf(pCmdFailFile,  __VA_ARGS__); \
-           fflush(pCmdFailFile); \
+                   fflush(pCmdFailFile); \
    } while (0)
 
 
